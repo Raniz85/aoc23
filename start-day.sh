@@ -20,4 +20,4 @@ echo "  \"day${prefixed}\"," >>Cargo.toml.new
 echo "]" >>Cargo.toml.new
 mv Cargo.toml.new Cargo.toml
 
-exec curl "https://adventofcode.com/2022/day/${1}/input" -H "Cookie: session=${AOC_SESSION}" -o "day${prefixed}/input"
+exec curl "https://adventofcode.com/2023/day/${1}/input" -H "Cookie: session=${AOC_SESSION}" -o "day${prefixed}/input"
