@@ -1,0 +1,10 @@
+[package]
+edition = "2021"
+name = "dayXX"
+version = "0.1.0"
+
+[dependencies]
+util = { path = "../util" }
+anyhow = "1.0.75"
+itertools = "0.12.0"
+rxpect = { path = "../../../rxpect" }
