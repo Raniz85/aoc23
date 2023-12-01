@@ -46,7 +46,7 @@ fn get_calibration_number(input: &str) -> Result<u8> {
     Ok(input.parse()?)
 }
 
-static NUMBER_WORDS: [(&str, u8); 20] = [
+static NUMBERS: [(&str, u8); 20] = [
     ("zero", 0),
     ("one", 1),
     ("two", 2),
@@ -72,7 +72,7 @@ static NUMBER_WORDS: [(&str, u8); 20] = [
 fn get_calibration_number_spelled_out(input: &str) -> Result<u8> {
     // Find the first and last occurrences of each digit or word
     // and sort them according to where in the string they occur
-    let digits = NUMBER_WORDS.iter()
+    let digits = NUMBERS.iter()
         .flat_map(|(word, value)| [
             input.find(word)
                 .and_then(|position| Some((position, *value))),

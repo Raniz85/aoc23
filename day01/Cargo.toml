@@ -8,4 +8,3 @@ util = { path = "../util" }
 anyhow = "1.0.75"
 itertools = "0.12.0"
 rstest = "0.18.2"
-regex = "1.10.2"
