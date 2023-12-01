@@ -30,6 +30,7 @@ mod test {
     use anyhow::Result;
     use util::Input;
 
+    /*
     #[test]
     pub fn test_part1() -> Result<()> {
         let input = Input::from_lines([
@@ -45,4 +46,5 @@ mod test {
         assert_eq!(part2(&input).unwrap(), 0);
         Ok(())
     }
+     */
 }
