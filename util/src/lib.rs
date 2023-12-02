@@ -24,6 +24,7 @@ impl Input {
         )
     }
 
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(input: impl Into<String>) -> Input {
         Input(input.into())
     }

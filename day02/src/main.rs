@@ -20,7 +20,7 @@ pub struct Game {
     hands: Vec<Hand>,
 }
 
-#[derive(Eq, PartialEq, Debug, Clone, Copy)]
+#[derive(Eq, PartialEq, Debug, Clone, Copy, Default)]
 pub struct Hand {
     red: u32,
     green: u32,
@@ -29,19 +29,19 @@ pub struct Hand {
 
 impl Hand {
     pub fn new(red: u32, green: u32, blue: u32) -> Hand {
-        Hand {
-            red,
-            green,
-            blue,
-        }
+        Hand { red, green, blue }
     }
 
     pub fn parse(input: &str) -> Result<Hand> {
-        let hand = input.split(',')
+        let hand = input
+            .split(',')
             .map(|cube| {
-                let (count, colour) = cube.trim().splitn(2, ' ')
+                let (count, colour) = cube
+                    .trim()
+                    .splitn(2, ' ')
                     .map(str::trim)
-                    .collect_tuple().ok_or_else(|| anyhow!("Invalid cube declaration {}", cube))?;
+                    .collect_tuple()
+                    .ok_or_else(|| anyhow!("Invalid cube declaration {}", cube))?;
                 let count: u32 = count.parse()?;
                 match colour {
                     "red" | "green" | "blue" => Ok((colour, count)),
@@ -80,34 +80,30 @@ impl Hand {
     }
 }
 
-impl Default for Hand {
-    fn default() -> Self {
-        Hand {
-            red: 0,
-            green: 0,
-            blue: 0,
-        }
-    }
-}
-
 impl Game {
     pub fn parse_many(input: &Input) -> Result<Vec<Game>> {
-        input.trim_trailing_newlines().as_lines()
+        input
+            .trim_trailing_newlines()
+            .as_lines()
             .map(Game::parse)
             .collect::<Result<Vec<_>>>()
     }
 
     pub fn parse(input: &str) -> Result<Game> {
-        let (declaration, cubes) = input.splitn(2, ":").collect_tuple().ok_or_else(|| anyhow!("Invalid game {}", input))?;
-        let (_, id) = declaration.splitn(2, ' ').collect_tuple().ok_or_else(|| anyhow!("Invalid game ID {}", declaration))?;
+        let (declaration, cubes) = input
+            .splitn(2, ':')
+            .collect_tuple()
+            .ok_or_else(|| anyhow!("Invalid game {}", input))?;
+        let (_, id) = declaration
+            .splitn(2, ' ')
+            .collect_tuple()
+            .ok_or_else(|| anyhow!("Invalid game ID {}", declaration))?;
         let id = id.parse()?;
-        let hands = cubes.split(';')
+        let hands = cubes
+            .split(';')
             .map(Hand::parse)
             .collect::<Result<Vec<_>>>()?;
-        Ok(Game {
-            id,
-            hands,
-        })
+        Ok(Game { id, hands })
     }
 
     pub fn is_valid(&self, limits: &Hand) -> bool {
@@ -115,7 +111,8 @@ impl Game {
     }
 
     pub fn power(&self) -> u32 {
-        self.hands.iter()
+        self.hands
+            .iter()
             .fold(Hand::default(), |maximums, hand| Hand {
                 red: maximums.red.max(hand.red),
                 green: maximums.green.max(hand.green),
@@ -125,34 +122,32 @@ impl Game {
     }
 }
 
-
 fn part1(input: &Input) -> Result<u32> {
     let limits = Hand::new(12, 13, 14);
     let id_sum = Game::parse_many(input)?
         .into_iter()
-        .filter_map(|game| if game.is_valid(&limits) {
-            Some(game.id)
-        } else {
-            None
+        .filter_map(|game| {
+            if game.is_valid(&limits) {
+                Some(game.id)
+            } else {
+                None
+            }
         })
         .sum();
     Ok(id_sum)
 }
 
 fn part2(input: &Input) -> Result<u32> {
-    let total_power = Game::parse_many(input)?
-        .iter()
-        .map(Game::power)
-        .sum();
+    let total_power = Game::parse_many(input)?.iter().map(Game::power).sum();
     Ok(total_power)
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{Game, Hand, part1, part2};
+    use crate::{part1, part2, Game, Hand};
     use anyhow::Result;
-    use util::Input;
     use rstest::rstest;
+    use util::Input;
 
     #[rstest]
     #[case("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green", Game {
@@ -190,7 +185,7 @@ mod test {
                 Hand::new(0, 2, 1), Hand::new(1, 3, 4), Hand::new(0, 1, 1)
             ]
         },
-        1 * 3 * 4,
+        3 * 4,
     )]
     pub fn test_game_power_is_calculated_correctly(#[case] game: Game, #[case] expected: u32) {
         // When the power of the game is retrieved

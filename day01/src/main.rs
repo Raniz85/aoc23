@@ -1,4 +1,3 @@
-use std::convert::identity;
 use anyhow::{anyhow, bail, Result};
 use itertools::Itertools;
 
@@ -15,33 +14,35 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-
 fn part1(input: &Input) -> Result<u32> {
-    input.trim_trailing_newlines()
+    input
+        .trim_trailing_newlines()
         .as_lines()
-        .map(|line| get_calibration_number(line))
+        .map(get_calibration_number)
         .map_ok(|nbr| nbr as u32)
         .sum()
 }
 
 fn part2(input: &Input) -> Result<u32> {
-    input.trim_trailing_newlines()
+    input
+        .trim_trailing_newlines()
         .as_lines()
-        .map(|line| get_calibration_number_spelled_out(line))
+        .map(get_calibration_number_spelled_out)
         .map_ok(|nbr| nbr as u32)
         .sum()
 }
 
 fn get_calibration_number(input: &str) -> Result<u8> {
-    let digits: String = input.chars().into_iter()
-        .filter(|c| c.is_digit(10))
-        .collect();
+    let digits: String = input.chars().filter(|c| c.is_ascii_digit()).collect();
     let input = match digits.len() {
         0 => bail!("Erroneous input"),
         1 => format!("{}{}", digits, digits),
         2 => digits,
-        len => format!("{}{}", digits.chars().nth(0).unwrap(),
-                       digits.chars().nth(len-1).unwrap()),
+        len => format!(
+            "{}{}",
+            digits.chars().next().unwrap(),
+            digits.chars().nth(len - 1).unwrap()
+        ),
     };
     Ok(input.parse()?)
 }
@@ -72,14 +73,15 @@ static NUMBERS: [(&str, u8); 20] = [
 fn get_calibration_number_spelled_out(input: &str) -> Result<u8> {
     // Find the first and last occurrences of each digit or word
     // and sort them according to where in the string they occur
-    let digits = NUMBERS.iter()
-        .flat_map(|(word, value)| [
-            input.find(word)
-                .and_then(|position| Some((position, *value))),
-            input.rfind(word)
-                .and_then(|position| Some((position, *value)))
-        ])
-        .filter_map(identity)
+    let digits = NUMBERS
+        .iter()
+        .flat_map(|(word, value)| {
+            [
+                input.find(word).map(|position| (position, *value)),
+                input.rfind(word).map(|position| (position, *value)),
+            ]
+        })
+        .flatten()
         .sorted()
         .collect_vec();
 
@@ -108,7 +110,10 @@ mod test {
     #[case("pqr3stu8vwx", 38)]
     #[case("a1b2c3d4e5f", 15)]
     #[case("treb7uchet", 77)]
-    pub fn that_get_calibration_number_returns_correct_calibration_number(#[case] input: &str, #[case] expected: u8) {
+    pub fn that_get_calibration_number_returns_correct_calibration_number(
+        #[case] input: &str,
+        #[case] expected: u8,
+    ) {
         // When the calibration number is extracted
         let nbr = get_calibration_number(input);
 
@@ -133,7 +138,10 @@ mod test {
     #[case("7pqrstsixteen", 76)]
     #[case("7pqrsteighthree", 73)]
     #[case("7237", 77)]
-    pub fn that_get_calibration_number_spelled_out_returns_correct_calibration_number(#[case] input: &str, #[case] expected: u8) {
+    pub fn that_get_calibration_number_spelled_out_returns_correct_calibration_number(
+        #[case] input: &str,
+        #[case] expected: u8,
+    ) {
         // When the calibration number is extracted
         let nbr = get_calibration_number_spelled_out(input);
 
@@ -154,12 +162,7 @@ mod test {
 
     #[test]
     pub fn test_part1() -> Result<()> {
-        let input = Input::from_lines([
-            "1abc2",
-            "pqr3stu8vwx",
-            "a1b2c3d4e5f",
-            "treb7uchet",
-        ]);
+        let input = Input::from_lines(["1abc2", "pqr3stu8vwx", "a1b2c3d4e5f", "treb7uchet"]);
         assert_eq!(part1(&input).unwrap(), 142);
         Ok(())
     }
