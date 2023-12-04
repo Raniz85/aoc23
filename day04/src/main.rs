@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
-use std::str::FromStr;
 use anyhow::{anyhow, Result};
 use itertools::Itertools;
+use std::str::FromStr;
 
 use util::Input;
 
@@ -17,9 +17,10 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-
 fn part1(input: &Input) -> Result<u64> {
-    input.trim_trailing_newlines().as_lines()
+    input
+        .trim_trailing_newlines()
+        .as_lines()
         .map(Card::from_str)
         .map_ok(|card| card.score())
         .sum()
@@ -27,10 +28,11 @@ fn part1(input: &Input) -> Result<u64> {
 
 fn part2(input: &Input) -> Result<u64> {
     // All the cards that we start with
-    let cards: Vec<Card> =
-        input.trim_trailing_newlines().as_lines()
-            .map(Card::from_str)
-            .try_collect()?;
+    let cards: Vec<Card> = input
+        .trim_trailing_newlines()
+        .as_lines()
+        .map(Card::from_str)
+        .try_collect()?;
     // Vector to keep track of how many we have of each card
     let mut card_counts = vec![1; cards.len()];
 
@@ -57,7 +59,6 @@ struct Card {
 }
 
 impl Card {
-
     /// Calculate the number of matches for this card
     pub fn matches(&self) -> usize {
         self.winners.intersection(&self.numbers).count()
@@ -76,27 +77,29 @@ impl FromStr for Card {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let (_declaration, winners, numbers) = s.split(&['|', ':'])
-            .collect_tuple().ok_or_else(|| anyhow!("Invalid card: `{}`", s))?;
-        let winners: HashSet<u32> = winners.split(' ')
+        let (_declaration, winners, numbers) = s
+            .split(&['|', ':'])
+            .collect_tuple()
+            .ok_or_else(|| anyhow!("Invalid card: `{}`", s))?;
+        let winners: HashSet<u32> = winners
+            .split(' ')
             .filter_map(|n| Some(n.trim()).filter(|n| !n.is_empty()).map(|n| n.parse()))
             .try_collect()?;
-        let numbers: HashSet<u32> = numbers.trim().split(' ')
+        let numbers: HashSet<u32> = numbers
+            .trim()
+            .split(' ')
             .filter_map(|n| Some(n.trim()).filter(|n| !n.is_empty()).map(|n| n.parse()))
             .try_collect()?;
-        Ok(Card {
-            winners,
-            numbers,
-        })
+        Ok(Card { winners, numbers })
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::str::FromStr;
-    use crate::{Card, part1, part2};
+    use crate::{part1, part2, Card};
     use anyhow::Result;
     use rstest::rstest;
+    use std::str::FromStr;
     use util::Input;
 
     #[rstest]
