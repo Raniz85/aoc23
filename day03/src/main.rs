@@ -105,7 +105,7 @@ fn get_numbers(row: usize, line: &str) -> Vec<Number> {
             } else if current_number.is_empty() {
                 (numbers, current_number, col)
             } else {
-                let number = current_number.parse().unwrap();
+                let number = current_number.parse().expect("Contents of string should be vetted with char::is_ascii_digit()");
                 numbers.push(Number {
                     number,
                     row,

@@ -37,8 +37,8 @@ fn part2(input: &Input) -> Result<u64> {
     // Go through each card, adding copies of each card that comes after if we win
     for (index, card) in cards.iter().enumerate() {
         let matches = card.matches();
-        let next = index +1;
-        let last = (index + 1 + matches).min(cards.len());
+        let next = index + 1;
+        let last = (next + matches).min(cards.len());
 
         // Add the number of instances of this card to each following card
         // i.e. 2 copies of card 2 with 2 matches adds 2 more copies of card 3 and 4

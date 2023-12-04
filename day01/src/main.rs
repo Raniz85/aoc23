@@ -40,8 +40,8 @@ fn get_calibration_number(input: &str) -> Result<u8> {
         2 => digits,
         len => format!(
             "{}{}",
-            digits.chars().next().unwrap(),
-            digits.chars().nth(len - 1).unwrap()
+            digits.chars().next().expect("Iterator has length > 2 according to match"),
+            digits.chars().nth(len - 1).expect("Iterator has length > 2 according to match"),
         ),
     };
     Ok(input.parse()?)
