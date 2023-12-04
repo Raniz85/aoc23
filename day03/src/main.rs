@@ -22,17 +22,27 @@ fn part2(input: &Input) -> Result<u32> {
     Ok(get_gear_ratios(input).into_iter().sum())
 }
 
-fn get_part_numbers(input: &Input) -> Vec<u32> {
-    let input = input.trim_trailing_newlines();
-    let symbols = input
-        .as_lines()
-        .enumerate()
-        .flat_map(|(row, line)| get_symbols(row, line))
-        .collect_vec();
+/// Get all Numbers in an input grid
+fn get_numbers_from_input(input: &Input) -> impl Iterator<Item=Number> + '_ {
     input
         .as_lines()
         .enumerate()
-        .flat_map(|(row, line)| get_numbers(row, line))
+        .flat_map(|(row, line)| Number::parse_row(row, line))
+}
+
+/// Get all Symbols in an input grid
+fn get_symbols_from_input(input: &Input) -> impl Iterator<Item=Symbol> + '_ {
+    input
+        .as_lines()
+        .enumerate()
+        .flat_map(|(row, line)| Symbol::parse_row(row, line))
+}
+
+fn get_part_numbers(input: &Input) -> Vec<u32> {
+    let input = input.trim_trailing_newlines();
+    let symbols = get_symbols_from_input(&input).collect_vec();
+    // Find all numbers that are adjacent to at least one symbol
+    get_numbers_from_input(&input)
         .filter(|number| symbols.iter().any(|symbol| number.is_adjacent(symbol)))
         .map(|number| number.number)
         .collect_vec()
@@ -40,22 +50,19 @@ fn get_part_numbers(input: &Input) -> Vec<u32> {
 
 fn get_gear_ratios(input: &Input) -> Vec<u32> {
     let input = input.trim_trailing_newlines();
-    let numbers = input
-        .as_lines()
-        .enumerate()
-        .flat_map(|(row, line)| get_numbers(row, line))
-        .collect_vec();
-    input
-        .as_lines()
-        .enumerate()
-        .flat_map(|(row, line)| get_symbols(row, line))
+    let numbers = get_numbers_from_input(&input).collect_vec();
+    get_symbols_from_input(&input)
+        // Find all * symbols
         .filter(|symbol| symbol.symbol == '*')
+        // For each * symbol, find all adjacent Numbers and try to collect them into a (Number, Number) tuple
+        // This will only be Some if exactly two Numbers are found and None otherwise
         .filter_map(|symbol| {
             numbers
                 .iter()
                 .filter(|number| number.is_adjacent(&symbol))
                 .collect_tuple()
         })
+        // Calculate the gear ratio for each pair of Numbers
         .map(|gears: (&Number, &Number)| gears.0.number * gears.1.number)
         .collect_vec()
 }
@@ -66,16 +73,18 @@ struct Symbol {
     col: usize,
 }
 
-fn get_symbols(row: usize, line: &str) -> Vec<Symbol> {
-    line.chars()
-        .enumerate()
-        .filter(|(_col, c)| !c.is_ascii_digit() && *c != '.')
-        .map(|(col, c)| Symbol {
-            symbol: c,
-            row,
-            col,
-        })
-        .collect_vec()
+impl Symbol {
+    fn parse_row(row: usize, line: &str) -> Vec<Symbol> {
+        line.chars()
+            .enumerate()
+            .filter(|(_col, c)| !c.is_ascii_digit() && *c != '.')
+            .map(|(col, c)| Symbol {
+                symbol: c,
+                row,
+                col,
+            })
+            .collect_vec()
+    }
 }
 
 struct Number {
@@ -91,40 +100,30 @@ impl Number {
             && self.start.saturating_sub(1) <= symbol.col
             && symbol.col <= self.end.saturating_add(1)
     }
-}
 
-fn get_numbers(row: usize, line: &str) -> Vec<Number> {
-    line.chars()
-        .chain(['.'])
-        .enumerate()
-        .fold(
-            (Vec::new(), String::new(), 0),
-            |(mut numbers, mut current_number, start), (col, c)| {
-                if c.is_ascii_digit() {
-                    let start = if current_number.is_empty() {
-                        col
-                    } else {
-                        start
-                    };
-                    current_number.push(c);
-                    (numbers, current_number, start)
-                } else if current_number.is_empty() {
-                    (numbers, current_number, col)
-                } else {
-                    let number = current_number
-                        .parse()
-                        .expect("Contents of string should be vetted with char::is_ascii_digit()");
-                    numbers.push(Number {
-                        number,
-                        row,
-                        start,
-                        end: col - 1,
-                    });
-                    (numbers, String::new(), col)
+    pub fn parse_row(row: usize, line: &str) -> Vec<Number> {
+        // Group all characters together with their column and collect into a vec
+        let indexed_chars = line.chars()
+            .enumerate()
+            .collect_vec();
+        // Split all chars into consecutive runs of ASCII digits, then parse each group into a number
+        indexed_chars.split(|(_col, c)| !c.is_ascii_digit())
+            .filter(|number| !number.is_empty())
+            .map(|number| {
+                let start = number.first().expect("Size already checked").0;
+                let end = number.last().expect("Size already checked").0;
+                let number = number.iter()
+                    .map(|(_col, c)| c)
+                    .collect::<String>().parse().expect("Only ascii digits from split");
+                Number {
+                    number,
+                    row,
+                    start,
+                    end
                 }
-            },
-        )
-        .0
+            })
+            .collect_vec()
+    }
 }
 
 #[cfg(test)]
