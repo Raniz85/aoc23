@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::ptr::write;
+
 use std::str::FromStr;
 use anyhow::{anyhow, Result};
 use itertools::Itertools;
@@ -20,38 +20,50 @@ fn main() -> Result<()> {
 
 fn part1(input: &Input) -> Result<u64> {
     input.trim_trailing_newlines().as_lines()
-        .map(|line| Card::from_str(line))
+        .map(Card::from_str)
         .map_ok(|card| card.score())
         .sum()
 }
 
 fn part2(input: &Input) -> Result<u64> {
+    // All the cards that we start with
     let cards: Vec<Card> =
         input.trim_trailing_newlines().as_lines()
-            .map(|line| Card::from_str(line))
+            .map(Card::from_str)
             .try_collect()?;
+    // Vector to keep track of how many we have of each card
     let mut card_counts = vec![1; cards.len()];
+
+    // Go through each card, adding copies of each card that comes after if we win
     for (index, card) in cards.iter().enumerate() {
-        for add_index in (index+1)..(index + card.matches() + 1).min(cards.len()) {
+        let matches = card.matches();
+        let next = index +1;
+        let last = (index + 1 + matches).min(cards.len());
+
+        // Add the number of instances of this card to each following card
+        // i.e. 2 copies of card 2 with 2 matches adds 2 more copies of card 3 and 4
+        for add_index in next..last {
             card_counts[add_index] += card_counts[index];
         }
     }
+    // Sum the number of cards we have
     let sum: usize = card_counts.iter().sum();
     Ok(sum as u64)
 }
 
 struct Card {
-    number: usize,
     winners: HashSet<u32>,
     numbers: HashSet<u32>,
 }
 
 impl Card {
 
+    /// Calculate the number of matches for this card
     pub fn matches(&self) -> usize {
         self.winners.intersection(&self.numbers).count()
     }
 
+    /// Calculate the score for this card
     pub fn score(&self) -> u64 {
         match self.matches() {
             0 => 0,
@@ -64,9 +76,8 @@ impl FromStr for Card {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let (declaration, winners, numbers) = s.split(&['|', ':'])
+        let (_declaration, winners, numbers) = s.split(&['|', ':'])
             .collect_tuple().ok_or_else(|| anyhow!("Invalid card: `{}`", s))?;
-        let card_number = declaration.split(' ').last().ok_or_else(|| anyhow!("Invalid card declaration `{}`", declaration))?.parse()?;
         let winners: HashSet<u32> = winners.split(' ')
             .filter_map(|n| Some(n.trim()).filter(|n| !n.is_empty()).map(|n| n.parse()))
             .try_collect()?;
@@ -74,7 +85,6 @@ impl FromStr for Card {
             .filter_map(|n| Some(n.trim()).filter(|n| !n.is_empty()).map(|n| n.parse()))
             .try_collect()?;
         Ok(Card {
-            number: card_number,
             winners,
             numbers,
         })
